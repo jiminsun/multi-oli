@@ -1,1 +1,1 @@
-# multi-olid
+# Multilingual Offensive Language Identification
