@@ -4,7 +4,7 @@ import os
 import pytorch_lightning as pl
 import sys
 
-from data import OLIDataModule
+from baseline.data import OLIDataModule
 from train import ArgsBase
 from train import ClassificationModule
 

@@ -1,20 +1,13 @@
 import argparse
-import os
 
-import gluonnlp as nlp
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
-from transformers import AutoTokenizer
-from transformers import BertTokenizer
-from transformers import XLMTokenizer
-from transformers import XLMRobertaTokenizer
 
-from kobert.pytorch_kobert import get_pytorch_kobert_model
-from kobert.utils import get_tokenizer
-from preprocessing import preprocess
+from baseline.utils import load_tokenizer
+from data_utils.preprocessing import preprocess
 from utils import SEP_CODE
 
 
@@ -53,6 +46,7 @@ class ArgsBase:
 
 class OLIDataset(Dataset):
     def __init__(self, filepath, enc_model, max_seq_len=512):
+        super().__init__()
         self._label_to_id = {'NOT': 0, 'OFF': 1}
         self._id_to_label = ['NOT', 'OFF']
         self._lang_to_id = {'da': 0, 'en': 1, 'ko': 2}
@@ -103,9 +97,8 @@ class OLIDataset(Dataset):
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
 
         return {'input_ids': np.array(input_ids, dtype=np.int_),
-                'length': num_tokens,
-                'attention_mask': np.array(attention_mask, dtype=np.float),
-                'label': np.array(label, dtype=np.int_)}
+                'attn_mask': np.array(attention_mask, dtype=np.float),
+                'labels': np.array(label, dtype=np.int_)}
 
     def __len__(self):
         return len(self.data)
@@ -115,9 +108,9 @@ class OLIDataModule(pl.LightningDataModule):
     def __init__(self, train_file, val_file, test_file,
                  enc_model, max_seq_len, batch_size):
         super().__init__()
-        self.train_file_path = train_file
-        self.val_file_path = val_file
-        self.test_file_path = test_file
+        self.train_file = train_file
+        self.val_file = val_file
+        self.test_file = test_file
         self.enc_model = enc_model
         self.max_seq_len = max_seq_len
         self.batch_size = batch_size
@@ -132,14 +125,14 @@ class OLIDataModule(pl.LightningDataModule):
     def setup(self, stage=None):
         # split dataset
         if stage == 'fit' or stage is None:
-            self.oli_train = OLIDataset(self.train_file_path,
+            self.oli_train = OLIDataset(self.train_file,
                                         self.enc_model,
                                         self.max_seq_len)
-            self.oli_val = OLIDataset(self.val_file_path,
+            self.oli_val = OLIDataset(self.val_file,
                                       self.enc_model,
                                       self.max_seq_len)
         elif stage == 'test' or stage is None:
-            self.oli_test = OLIDataset(self.test_file_path,
+            self.oli_test = OLIDataset(self.test_file,
                                        self.enc_model,
                                        self.max_seq_len)
 
@@ -161,29 +154,4 @@ class OLIDataModule(pl.LightningDataModule):
                              batch_size=self.batch_size,
                              num_workers=5, shuffle=False)
         return test_dl
-
-
-def load_tokenizer(model):
-    if model == 'mbert':
-        tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-uncased')
-        tokenizer.add_tokens(['@user'])
-    elif model == 'bert':
-        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        tokenizer.add_tokens(['@user'])
-    elif model == 'kobert':
-        _, vocab = get_pytorch_kobert_model()
-        tokenizer = get_tokenizer()
-        tokenizer = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
-    elif model == 'kcbert':
-        tokenizer = AutoTokenizer.from_pretrained('beomi/kcbert-base')
-    elif model == 'xlm':
-        tokenizer = XLMTokenizer.from_pretrained('xlm-mlm-100-1280')
-        tokenizer.add_tokens(['@user'])
-    elif model == 'xlm-r':
-        tokenizer = XLMRobertaTokenizer.from_pretrained('xlm-roberta-base')
-        tokenizer.add_tokens(['@user'])
-    else:
-        raise ValueError("model name should be one of ['mbert', 'bert', 'kobert', 'kcbert', 'xlm', 'xlm-r']")
-
-    return tokenizer
 
