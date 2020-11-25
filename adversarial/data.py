@@ -128,23 +128,37 @@ class AdversarialLearningDataModule(pl.LightningDataModule):
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(
             parents=[parent_parser], add_help=False)
+
+        parser.add_argument('--train_with_both',
+                            action='store_true',
+                            default=False,
+                            help='if true, uses the concatenated training dataset (en+da)')
+
+        parser.add_argument('--val_with',
+                            type=str,
+                            default='en',
+                            help='english (en) or target language (e.g. danish -> da)')
+
         return parser
 
     def setup(self, stage=None):
         # split dataset
         if stage == 'fit' or stage is None:
+            print('** Loading train **')
             self.train = AdversarialLearningDataset(
                 en_file=self.en_train_file,
                 non_en_file=self.non_en_train_file,
                 enc_model=self.enc_model,
                 max_seq_len=self.max_seq_len
             )
+            print('** Loading dev **')
             self.val = OLIDataset(
                 self.val_file,
                 self.enc_model,
                 self.max_seq_len
             )
         elif stage == 'test' or stage is None:
+            print('** Loading test **')
             self.test = OLIDataset(
                 self.test_file,
                 self.enc_model,
