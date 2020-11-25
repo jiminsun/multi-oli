@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 import sys
 from setproctitle import setproctitle
 
+from adversarial.data import AdversarialLearningDataModule
 from adversarial.model import AdversarialTrainingModule
 from adversarial.trainer import train_adversarial
 from baseline.data import ArgsBase
@@ -59,7 +60,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--exp-name',
+        '--exp_name',
         default='',
         type=str,
         help='suffix to specify experiment name'
@@ -82,6 +83,7 @@ if __name__ == "__main__":
     parser = ClassificationModule.add_model_specific_args(parser)
     parser = AdversarialTrainingModule.add_model_specific_args(parser)
     parser = OLIDataModule.add_model_specific_args(parser)
+    parser = AdversarialLearningDataModule.add_model_specific_args(parser)
     args = parser.parse_args()
 
     main(args)
