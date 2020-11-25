@@ -10,9 +10,9 @@ from baseline.utils import load_pretrained
 
 
 class AdversarialTrainingModule(ClassificationModule):
-    def __init__(self, hparams):
-        super().__init__(hparams)
-        self.bert = load_pretrained(hparams.bert)
+    def __init__(self, args):
+        super().__init__(args)
+        self.bert = load_pretrained(args.bert)
         self.pool = MeanPool()
         self.out = nn.ModuleDict({
             'offensive': nn.Linear(self.bert.config.hidden_size, 2, bias=True),
@@ -196,7 +196,7 @@ class AdversarialTrainingModule(ClassificationModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--task-lr', type=float, default=2e-6, help="task loss learning rate")
-        parser.add_argument('--gen-lr', type=float, default=2e-8, help="generator loss learning rate")
-        parser.add_argument('--disc-lr', type=float, default=5e-5, help="discriminator loss learning rate")
+        parser.add_argument('--task_lr', type=float, default=2e-6, help="task loss learning rate")
+        parser.add_argument('--gen_lr', type=float, default=2e-8, help="generator loss learning rate")
+        parser.add_argument('--disc_lr', type=float, default=5e-5, help="discriminator loss learning rate")
         return parser
