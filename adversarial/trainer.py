@@ -15,11 +15,15 @@ def train_adversarial(args, exp_name):
     # init dataset
     en_data_dir = os.path.join(args.data_dir, 'en')
     non_en_data_dir = os.path.join(args.data_dir, args.lang)
+    concat_data_dir = os.path.join(args.data_dir, f'en_{args.lang}')
+
+    train_dir = concat_data_dir if args.train_with_both else en_data_dir
+    val_dir = en_data_dir if (args.val_with == 'en') else non_en_data_dir
 
     dm = AdversarialLearningDataModule(
-        en_train_file=os.path.join(en_data_dir, args.train_file),
+        en_train_file=os.path.join(train_dir, args.train_file),
         non_en_train_file=os.path.join(non_en_data_dir, args.train_file),
-        val_file=os.path.join(non_en_data_dir, args.val_file),
+        val_file=os.path.join(val_dir, args.val_file),
         test_file=os.path.join(non_en_data_dir, args.test_file),
         enc_model=args.bert,
         max_seq_len=args.max_seq_len,
