@@ -26,3 +26,16 @@ Still, we examine whether the two somewhat related tasks can improve one another
 
 ## Model
 * The offensiveness classifier is simply a multilingual BERT (m-BERT) encoder, followed by a linear layer. 
+
+## Usage
+```
+train.py [--task TASK] [--bert BERT] [--lang LANG]
+         [--exp_name EXP_NAME] [--device DEVICE]
+         [--load_from LOAD_FROM] [--data_dir DATA_DIR]
+         [--train_file TRAIN_FILE] [--val_file VAL_FILE]
+         [--test_file TEST_FILE] [--max_seq_len MAX_SEQ_LEN] [--lr LR]
+         [--warmup_ratio WARMUP_RATIO] [--max_grad_norm MAX_GRAD_NORM]
+         [--batch_size BATCH_SIZE] [--max_epochs MAX_EPOCHS]
+         [--task_lr TASK_LR] [--gen_lr GEN_LR] [--disc_lr DISC_LR]
+         [--train_with_both] [--val_with VAL_WITH]
+```
