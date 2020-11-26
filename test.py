@@ -3,39 +3,55 @@ import os
 
 import pytorch_lightning as pl
 import sys
+from torch.utils.data import DataLoader
 
+from baseline.data import ArgsBase
 from baseline.data import OLIDataModule
-from train import ArgsBase
-from train import ClassificationModule
+from baseline.data import OLIDataset
+from baseline.model import ClassificationModule
 
 
-def main(args):
-    model = ClassificationModule(args)
-    model.freeze()
-    model.eval()
-
-    # init dataset
-    data_dir = os.path.join(args.data_dir, args.lang)
-
-    dm = OLIDataModule(
-        train_file=os.path.join(data_dir, args.train_file),
-        val_file=os.path.join(data_dir, args.val_file),
-        test_file=os.path.join(data_dir, args.test_file),
-        enc_model=args.model,
-        max_seq_len=args.max_seq_len,
-        batch_size=args.batch_size
+def test(test_file, args):
+    test_dataset = OLIDataset(
+        filepath=test_file,
+        enc_model=args.bert,
+        max_seq_len=args.max_seq_len
     )
+
+    test_dataloader = DataLoader(test_dataset,
+                                 batch_size=args.batch_size,
+                                 num_workers=5, shuffle=False)
+
+    task_model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
+                                                           args=args, strict=False)
+
+    task_model.eval()
+    task_model.freeze()
 
     trainer = pl.Trainer(
         gpus=[args.device]
     )
 
     trainer.test(
-        model=model,
-        ckpt_path=args.load_from,
-        verbose=True,
-        datamodule=dm
+        model=task_model,
+        test_dataloaders=test_dataloader,
+        # specifying ckpt here doesn't work, resulting in extremely low performance
+        # ckpt_path=None,
+        verbose=False,
     )
+
+
+def main(args):
+    print(f'Loaded model from {args.load_from}')
+
+    # Load validation dataset
+    data_dir = os.path.join(args.data_dir, args.lang)
+    test_file = os.path.join(data_dir, args.val_file)
+    test(test_file, args)
+
+    # Load test dataset
+    test_file = os.path.join(data_dir, args.test_file)
+    test(test_file, args)
 
 
 if __name__ == '__main__':
@@ -46,9 +62,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--model',
+        '--bert',
         type=str,
-        default='kobert',
+        default='mbert',
         help='pre-trained model to use: bert, kobert, mbert, xlm'
     )
 
@@ -60,23 +76,22 @@ if __name__ == '__main__':
     )
 
     parser.add_argument(
-        '--exp-name',
-        default='',
-        type=str,
-        help='suffix to specify experiment name'
-    )
-
-    parser.add_argument(
         '--device',
         default=0,
         type=int,
     )
 
     parser.add_argument(
-        '--load-from',
+        '--load_from',
         default=None,
         type=str,
         help='path to load model to resume training'
+    )
+
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=16
     )
 
     parser = ArgsBase.add_model_specific_args(parser)
