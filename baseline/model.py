@@ -20,6 +20,7 @@ class BertClassifier(nn.Module):
     L : max sequence length in batch
 
     """
+
     def __init__(self, args):
         super().__init__()
         self.bert = load_pretrained(args.bert)
@@ -36,11 +37,12 @@ class BertClassifier(nn.Module):
         Returns:
             logits: prediction scores                           [B x C]
         """
-        last_hidden_state, _ = self.bert(input_ids=input_ids,
-                                         attention_mask=attention_mask)     # [B x L x E]
-        x = self.pool.forward(last_hidden_state=last_hidden_state,          # [B x E]
+        outputs = self.bert(input_ids=input_ids,
+                            attention_mask=attention_mask)          # [B x L x E]
+        last_hidden_state = outputs[0]
+        x = self.pool.forward(last_hidden_state=last_hidden_state,  # [B x E]
                               attention_mask=attention_mask)
-        logits = self.out(x)                                                # [B x C]
+        logits = self.out(x)  # [B x C]
         return logits
 
 
@@ -58,8 +60,6 @@ class BaseModule(pl.LightningModule):
         parser.add_argument('--lr', type=float, default=5e-5, help='The initial learning rate')
         parser.add_argument('--warmup_ratio', type=float, default=0.1, help='warmup ratio')
         parser.add_argument('--max_grad_norm', type=float, default=1.0, help='gradient clipping')
-        parser.add_argument('--batch_size', type=int, default=16)
-        parser.add_argument('--max_epochs', type=int, default=20)
         return parser
 
     def configure_optimizers(self):
@@ -150,7 +150,6 @@ class ClassificationModule(BaseModule):
             'val_f1': f1,
         }
 
-        print(metrics)
         self.logger.log_metrics(metrics, step=self.train_step)
 
         metrics['y_pred'] = y_pred
@@ -191,6 +190,7 @@ class ClassificationModule(BaseModule):
                    'test_recall': recall,
                    'test_f1': f1}
 
+        print("\n")
         print("#" * 30)
         print(f"Test accuracy  | {test_acc:.3f}")
         print(f"     precision | {precision:.3f}")
