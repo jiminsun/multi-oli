@@ -10,7 +10,12 @@ from baseline.model import ClassificationModule
 
 def train_baseline(args, exp_name):
     # init model
-    model = ClassificationModule(args)
+    if args.load_from is None:
+        model = ClassificationModule(args)
+    else:
+        model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
+                                                          args=args,
+                                                          strict=False)
 
     # init dataset
     data_dir = os.path.join(args.data_dir, args.lang)
@@ -29,8 +34,8 @@ def train_baseline(args, exp_name):
         verbose=True,
         save_last=True,
         mode='min',
-        save_top_k=-1,
-        prefix=f'{args.lang}_{args.bert}'
+        save_top_k=10,
+        prefix=f'{args.lang}'
     )
 
     # tensorboard logger
@@ -54,7 +59,7 @@ def train_baseline(args, exp_name):
         callbacks=[early_stop_callback],
         max_epochs=args.max_epochs,
         gpus=[args.device],
-        resume_from_checkpoint=args.load_from,
+        # resume_from_checkpoint=args.load_from,
         checkpoint_callback=checkpoint_callback,
         gradient_clip_val=args.max_grad_norm,
         log_every_n_steps=10,

@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 from baseline.utils import load_tokenizer
 from data_utils.preprocessing import preprocess
-from utils import SEP_CODE
+from data_utils.utils import SEP_CODE
 
 
 class ArgsBase:
@@ -66,6 +66,7 @@ class OLIDataset(Dataset):
             self.pad_id = self.tokenizer._convert_token_to_id(self.pad_token)
 
     def load_data(self, filepath):
+        print(f'Loading data from {filepath}')
         data = pd.read_csv(filepath, sep=SEP_CODE)
 
         data['label'] = data['label'].apply(lambda x: self._label_to_id[x])
