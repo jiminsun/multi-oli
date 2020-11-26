@@ -73,10 +73,22 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        '--load-from',
+        '--load_from',
         default=None,
         type=str,
         help='path to load model to resume training'
+    )
+
+    parser.add_argument(
+        '--batch_size',
+        type=int,
+        default=16
+    )
+
+    parser.add_argument(
+        '--max_epochs',
+        type=int,
+        default=20
     )
 
     parser = ArgsBase.add_model_specific_args(parser)
