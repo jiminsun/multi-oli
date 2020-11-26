@@ -36,7 +36,7 @@ def train_adversarial(args, exp_name):
         verbose=True,
         save_last=True,
         mode='min',
-        save_top_k=5,
+        save_top_k=-1,
         prefix=f'{args.lang}_{args.bert}'
     )
 
@@ -59,7 +59,6 @@ def train_adversarial(args, exp_name):
     trainer = pl.Trainer(
         logger=logger,
         automatic_optimization=False,
-        # callbacks=[early_stop_callback],
         max_epochs=args.max_epochs,
         gpus=[args.device],
         resume_from_checkpoint=args.load_from,

@@ -153,16 +153,16 @@ class AdversarialLearningDataModule(pl.LightningDataModule):
             )
             print('** Loading dev **')
             self.val = OLIDataset(
-                self.val_file,
-                self.enc_model,
-                self.max_seq_len
+                filepath=self.val_file,
+                enc_model=self.enc_model,
+                max_seq_len=self.max_seq_len
             )
         elif stage == 'test' or stage is None:
             print('** Loading test **')
             self.test = OLIDataset(
-                self.test_file,
-                self.enc_model,
-                self.max_seq_len
+                filepath=self.test_file,
+                enc_model=self.enc_model,
+                max_seq_len=self.max_seq_len
             )
 
     # return the dataloader for each split
