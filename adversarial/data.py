@@ -185,33 +185,3 @@ class AdversarialLearningDataModule(pl.LightningDataModule):
                              batch_size=self.batch_size,
                              num_workers=5, shuffle=False)
         return test_dl
-
-
-if __name__ == "__main__":
-    dataset = AdversarialLearningDataset(
-        en_file='./dataset/en/train.txt',
-        non_en_file='./dataset/da/train.txt',
-        enc_model='mbert',
-        max_seq_len=10
-    )
-    dataloader = DataLoader(dataset,
-                            batch_size=8,
-                            num_workers=5,
-                            collate_fn=AdversarialLearningDataset.collate_fn)
-    for idx, batch in enumerate(dataloader):
-        for k, v in batch.items():
-            print(k, v.size())
-        break
-
-    single_dataset = OLIDataset(
-        filepath='./dataset/en/train.txt',
-        enc_model='mbert',
-        max_seq_len=10
-    )
-    single_dataloader = DataLoader(single_dataset,
-                                   batch_size=8,
-                                   num_workers=5)
-    for idx, batch in enumerate(single_dataloader):
-        for k, v in batch.items():
-            print(k, v.size())
-        break
