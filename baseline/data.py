@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 from baseline.utils import load_tokenizer
 from data_utils.preprocessing import preprocess
-from data_utils.utils import SEP_CODE
+from data_utils.utils import SEP_CODE, load_data
 
 
 class ArgsBase:
@@ -24,6 +24,7 @@ class ArgsBase:
 
         parser.add_argument('--train_file',
                             type=str,
+                            nargs='+',
                             default='train.txt',
                             help='train file')
 
@@ -45,7 +46,7 @@ class ArgsBase:
 
 
 class OLIDataset(Dataset):
-    def __init__(self, filepath, enc_model, max_seq_len=512):
+    def __init__(self, filepath, enc_model, max_seq_len=512, include_samples=False):
         super().__init__()
         self._label_to_id = {'NOT': 0, 'OFF': 1}
         self._id_to_label = ['NOT', 'OFF']
@@ -58,6 +59,7 @@ class OLIDataset(Dataset):
         self.enc_model = enc_model
         self.tokenizer = load_tokenizer(enc_model)
         self.max_seq_len = max_seq_len
+        self.include_samples = include_samples
         if enc_model == 'kobert':
             self.pad_token = self.tokenizer.vocab.padding_token
             self.pad_id = self.tokenizer.vocab.token_to_idx[self.pad_token]
@@ -67,8 +69,11 @@ class OLIDataset(Dataset):
 
     def load_data(self, filepath):
         print(f'Loading data from {filepath}')
-        data = pd.read_csv(filepath, sep=SEP_CODE)
-
+        if isinstance(filepath, list):
+            dataframes = [load_data(f) for f in filepath]
+            data = pd.concat(dataframes, ignore_index=True)
+        else:
+            data = load_data(filepath)
         data['label'] = data['label'].apply(lambda x: self._label_to_id[x])
         return data
 
@@ -97,9 +102,12 @@ class OLIDataset(Dataset):
             attention_mask = attention_mask + [0] * num_pad
         input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
 
-        return {'input_ids': np.array(input_ids, dtype=np.int_),
+        data = {'input_ids': np.array(input_ids, dtype=np.int_),
                 'attn_mask': np.array(attention_mask, dtype=np.float),
                 'labels': np.array(label, dtype=np.int_)}
+        if self.include_samples:
+            data['samples'] = str(record['sample'])
+        return data
 
     def __len__(self):
         return len(self.data)
@@ -135,7 +143,8 @@ class OLIDataModule(pl.LightningDataModule):
         elif stage == 'test' or stage is None:
             self.oli_test = OLIDataset(self.test_file,
                                        self.enc_model,
-                                       self.max_seq_len)
+                                       self.max_seq_len,
+                                       include_samples=True)
 
     # return the dataloader for each split
     def train_dataloader(self):
