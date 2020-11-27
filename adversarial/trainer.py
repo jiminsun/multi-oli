@@ -34,9 +34,9 @@ def train_adversarial(args, exp_name):
         monitor='val_loss',
         filepath=f'logs/{exp_name}/' + '{epoch}-{val_loss:.3f}-{val_f1:.3f}',
         verbose=True,
-        save_last=True,
+        save_last=False,
         mode='min',
-        save_top_k=-1,
+        save_top_k=3,
         prefix=f'{args.lang}_{args.bert}'
     )
 
@@ -58,6 +58,7 @@ def train_adversarial(args, exp_name):
     # train
     trainer = pl.Trainer(
         logger=logger,
+        callbacks=[early_stop_callback],
         automatic_optimization=False,
         max_epochs=args.max_epochs,
         gpus=[args.device],
@@ -67,7 +68,3 @@ def train_adversarial(args, exp_name):
         log_every_n_steps=10,
     )
     trainer.fit(model, dm)
-
-    # test
-    trainer.test(ckpt_path='best',
-                 datamodule=dm)

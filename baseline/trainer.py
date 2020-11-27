@@ -19,8 +19,17 @@ def train_baseline(args, exp_name):
 
     # init dataset
     data_dir = os.path.join(args.data_dir, args.lang)
+
+    if isinstance(args.train_file, str):
+        train_file = os.path.join(data_dir, args.train_file)
+    elif len(args.train_file) == 1:
+        train_file = os.path.join(data_dir, args.train_file[0])
+    else:
+        # support multiple training files
+        train_file = args.train_file
+
     dm = OLIDataModule(
-        train_file=os.path.join(data_dir, args.train_file),
+        train_file=train_file,
         val_file=os.path.join(data_dir, args.val_file),
         test_file=os.path.join(data_dir, args.test_file),
         enc_model=args.bert,
@@ -32,9 +41,9 @@ def train_baseline(args, exp_name):
         monitor='val_loss',
         filepath=f'logs/{exp_name}/' + '{epoch}-{val_loss:.3f}-{val_f1:.3f}',
         verbose=True,
-        save_last=True,
+        save_last=False,
         mode='min',
-        save_top_k=10,
+        save_top_k=3,
         prefix=f'{args.lang}'
     )
 
@@ -48,7 +57,7 @@ def train_baseline(args, exp_name):
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
         min_delta=0.00,
-        patience=5,
+        patience=10,
         verbose=False,
         mode='min'
     )
@@ -65,9 +74,3 @@ def train_baseline(args, exp_name):
         log_every_n_steps=10,
     )
     trainer.fit(model, dm)
-
-    # test
-    trainer.test(ckpt_path='best',
-                 datamodule=dm)
-
-
