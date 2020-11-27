@@ -151,6 +151,34 @@ class AdversarialTrainingModule(ClassificationModule):
         self.log('val_loss', loss)
         return metrics
 
+    def test_step(self, batch, batch_idx):
+        language_logits = self.pred_language(input_ids=batch['input_ids'],
+                                             attention_mask=batch['attn_mask'])
+        task_logits = self.forward(input_ids=batch['input_ids'],
+                                   attention_mask=batch['attn_mask'])
+        task_pred = task_logits.argmax(dim=-1)
+        output = {
+            'samples': batch['samples'],
+            'lang_logits': language_logits.cpu().tolist(),
+            'y_true': batch['labels'].cpu().tolist(),
+            'y_pred': task_pred.cpu().tolist()
+        }
+        return output
+
+    def test_epoch_end(self, outputs):
+        metrics = super().test_epoch_end(outputs)
+        samples = []
+        lang_logits = []
+
+        for output in outputs:
+            samples += output['samples']
+            lang_logits += output['lang_logits']
+
+        metrics['samples'] = samples
+        metrics['lang_logits'] = lang_logits
+        return metrics
+
+
     def configure_optimizers(self):
         lr_task = self.hparams.task_lr
         lr_g = self.hparams.gen_lr
