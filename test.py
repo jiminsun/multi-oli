@@ -9,6 +9,7 @@ from baseline.data import ArgsBase
 from baseline.data import OLIDataModule
 from baseline.data import OLIDataset
 from baseline.model import ClassificationModule
+from utils import find_best_ckpt
 
 
 def test(test_file, args):
@@ -17,13 +18,19 @@ def test(test_file, args):
         enc_model=args.bert,
         max_seq_len=args.max_seq_len
     )
-
     test_dataloader = DataLoader(test_dataset,
                                  batch_size=args.batch_size,
                                  num_workers=5, shuffle=False)
 
-    task_model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
-                                                           args=args, strict=False)
+    if args.load_from.endswith('ckpt'):
+        print(f'Loaded model from {args.load_from}')
+        task_model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
+                                                               args=args, strict=False)
+    else:
+        best_ckpt = find_best_ckpt(args.load_from, metric=f'val_{args.best}')
+        print(f'Loaded model from {best_ckpt}')
+        task_model = ClassificationModule.load_from_checkpoint(checkpoint_path=best_ckpt,
+                                                               args=args, strict=False)
 
     task_model.eval()
     task_model.freeze()
@@ -42,7 +49,6 @@ def test(test_file, args):
 
 
 def main(args):
-    print(f'Loaded model from {args.load_from}')
 
     # Load validation dataset
     data_dir = os.path.join(args.data_dir, args.lang)
@@ -92,6 +98,12 @@ if __name__ == '__main__':
         '--batch_size',
         type=int,
         default=16
+    )
+
+    parser.add_argument(
+        '--best',
+        type=str,
+        default='f1'
     )
 
     parser = ArgsBase.add_model_specific_args(parser)
