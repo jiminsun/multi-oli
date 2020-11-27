@@ -188,7 +188,9 @@ class ClassificationModule(BaseModule):
         metrics = {'test_accuracy': test_acc,
                    'test_precision': precision,
                    'test_recall': recall,
-                   'test_f1': f1}
+                   'test_f1': f1,
+                   'y_true': y_true,
+                   'y_pred': y_pred}
 
         print("\n")
         print("#" * 30)
@@ -198,4 +200,5 @@ class ClassificationModule(BaseModule):
         print(f"     f1 score  | {f1:.3f}")
         print("#" * 30)
         print("\n")
+
         return metrics
