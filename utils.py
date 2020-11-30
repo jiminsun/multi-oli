@@ -10,31 +10,38 @@ LAND_IDX_TO_LABEL = {0: 'da', 1: 'en'}
 
 
 def generate_exp_name(args):
+    """ Generates an experiment's name & path according to its configuration """
     try:
+        # baseline, adversarial experiments for specific target language
         exp_name = f'{args.lang}/{args.task}/{args.bert}/'
     except AttributeError:
+        # plotting doesn't use lang argument
         exp_name = f'logs/{args.task}/'
     if len(args.exp_name):
         exp_name = exp_name + f'{args.exp_name}'
     else:
+        # when exp_name not specified, use current time
         now = datetime.now().strftime("%m-%d-%H:%M")
         exp_name += now
+    # Set process name to exp_name
     setproctitle(exp_name)
-    print(exp_name)
+    print(f'Experiment saved at {exp_name}')
     return exp_name
 
 
 def parse_score(ckpt_path, metric='val_f1'):
+    """ Parses the score of a specified metric from checkpoint name """
     score = re.search(metric + '=[0-9]+\.[0-9]+', ckpt_path).group()
     score = float(re.search('[0-9]+\.[0-9]+', score).group())
     return score
 
 
 def find_best_ckpt(fpath, metric='val_f1'):
+    """ Finds best ckpt w.r.t. metric in fpath with multiple checkpoints """
     ckpts = [os.path.join(fpath, c) for c in os.listdir(fpath) if metric in c]
     ckpts = [(ckpt, parse_score(ckpt, metric)) for ckpt in ckpts]
     if metric == 'val_f1':
-        # higest f1 score
+        # highest f1 score
         best_ckpt = sorted(ckpts, key=lambda x: x[1])[-1][0]
     elif metric == 'val_loss':
         # smallest loss
