@@ -16,6 +16,9 @@ def train_baseline(args, exp_name):
         model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
                                                           args=args,
                                                           strict=False)
+        if args.freeze_bert:
+            for param in model.model.bert.parameters():
+                param.requires_grad = False
 
     # init dataset
     data_dir = os.path.join(args.data_dir, args.lang)
