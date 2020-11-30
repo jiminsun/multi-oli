@@ -22,10 +22,17 @@ def test(test_file, args):
                                  batch_size=args.batch_size,
                                  num_workers=5, shuffle=False)
 
-    if args.load_from.endswith('ckpt'):
+    if args.load_from is None:
+        # random initialization
+        SEED = 123
+        pl.seed_everything(SEED)
+        task_model = ClassificationModule(args=args)
+
+    elif args.load_from.endswith('ckpt'):
         print(f'Loaded model from {args.load_from}')
         task_model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
                                                                args=args, strict=False)
+
     else:
         best_ckpt = find_best_ckpt(args.load_from, metric=f'val_{args.best}')
         print(f'Loaded model from {best_ckpt}')
@@ -42,8 +49,6 @@ def test(test_file, args):
     trainer.test(
         model=task_model,
         test_dataloaders=test_dataloader,
-        # specifying ckpt here doesn't work, resulting in extremely low performance
-        # ckpt_path=None,
         verbose=False,
     )
 
@@ -97,7 +102,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch_size',
         type=int,
-        default=16
+        default=64
     )
 
     parser.add_argument(
@@ -105,6 +110,7 @@ if __name__ == '__main__':
         type=str,
         default='f1'
     )
+
 
     parser = ArgsBase.add_model_specific_args(parser)
     parser = ClassificationModule.add_model_specific_args(parser)
