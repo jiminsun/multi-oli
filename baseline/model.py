@@ -1,5 +1,6 @@
 import argparse
 import pytorch_lightning as pl
+import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
@@ -57,33 +58,38 @@ class BaseModule(pl.LightningModule):
         parser = argparse.ArgumentParser(
             parents=[parent_parser], add_help=False)
         # training
-        parser.add_argument('--lr', type=float, default=5e-5, help='The initial learning rate')
+        parser.add_argument('--lr', type=float, default=2e-6, help='The initial learning rate')
+        parser.add_argument('--use_warmup', action='store_true', default=False)
         parser.add_argument('--warmup_ratio', type=float, default=0.1, help='warmup ratio')
         parser.add_argument('--max_grad_norm', type=float, default=1.0, help='gradient clipping')
         return parser
 
     def configure_optimizers(self):
-        # Prepare optimizer
-        param_optimizer = list(self.model.named_parameters())
-        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(
-                nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(
-                nd in n for nd in no_decay)], 'weight_decay': 0.0}
-        ]
-        optimizer = AdamW(optimizer_grouped_parameters,
-                          lr=self.hparams.lr, correct_bias=False)
-        # warm up lr
-        num_train_steps = len(self.train_dataloader()) * \
-                          self.hparams.max_epochs
-        num_warmup_steps = int(num_train_steps * self.hparams.warmup_ratio)
-        scheduler = get_cosine_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=num_warmup_steps, num_training_steps=num_train_steps)
-        lr_scheduler = {'scheduler': scheduler, 'name': 'cosine_schedule_with_warmup',
-                        'monitor': 'loss', 'interval': 'step',
-                        'frequency': 1}
+        if self.hparams.use_warmup:
+            # Prepare optimizer
+            param_optimizer = list(self.model.named_parameters())
+            no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+            optimizer_grouped_parameters = [
+                {'params': [p for n, p in param_optimizer if not any(
+                    nd in n for nd in no_decay)], 'weight_decay': 0.01},
+                {'params': [p for n, p in param_optimizer if any(
+                    nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            ]
+            optimizer = AdamW(optimizer_grouped_parameters,
+                              lr=self.hparams.lr, correct_bias=False)
+            # warm up lr
+            num_train_steps = len(self.train_dataloader()) * \
+                              self.hparams.max_epochs
+            num_warmup_steps = int(num_train_steps * self.hparams.warmup_ratio)
+            scheduler = get_cosine_schedule_with_warmup(
+                optimizer,
+                num_warmup_steps=num_warmup_steps, num_training_steps=num_train_steps)
+            lr_scheduler = {'scheduler': scheduler, 'name': 'cosine_schedule_with_warmup',
+                            'monitor': 'loss', 'interval': 'step',
+                            'frequency': 1}
+        else:
+            optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
+            lr_scheduler = []
         return [optimizer], [lr_scheduler]
 
 
