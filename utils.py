@@ -9,7 +9,10 @@ LAND_IDX_TO_LABEL = {0: 'da', 1: 'en'}
 
 
 def generate_exp_name(args):
-    exp_name = f'{args.lang}/{args.task}/{args.bert}/'
+    try:
+        exp_name = f'{args.lang}/{args.task}/{args.bert}/'
+    except AttributeError:
+        exp_name = f'logs/{args.task}/'
     if len(args.exp_name):
         exp_name = exp_name + f'{args.exp_name}'
     else:
