@@ -17,7 +17,7 @@ from utils import generate_exp_name
 
 def main(args):
     # fix random seeds for reproducibility
-    SEED = 123
+    SEED = args.seed
     pl.seed_everything(SEED)
     # generate experiment name
     exp_name = generate_exp_name(args)
@@ -89,6 +89,18 @@ if __name__ == "__main__":
         '--max_epochs',
         type=int,
         default=20
+    )
+
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=123
+    )
+
+    parser.add_argument(
+        '--freeze_bert',
+        action='store_true',
+        default=False
     )
 
     parser = ArgsBase.add_model_specific_args(parser)
