@@ -12,7 +12,7 @@ url_pattern = re.compile(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-
 def preprocess(doc, lang):
     if lang == 'ko':
         return preprocess_ko(doc)
-    elif lang == 'da' or lang == 'en':
+    elif 'da' in lang or lang == 'en':
         return preprocess_tweet(doc)
     else:
         raise ValueError('language should be one of [da, ko, en].')
