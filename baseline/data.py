@@ -50,8 +50,8 @@ class OLIDataset(Dataset):
         super().__init__()
         self._label_to_id = {'NOT': 0, 'OFF': 1}
         self._id_to_label = ['NOT', 'OFF']
-        self._lang_to_id = {'da': 0, 'en': 1, 'ko': 2}
-        self._id_to_lang = ['da', 'en', 'ko']
+        self._lang_to_id = {'da': 0, 'en': 1, 'ko': 2, 'da_test': 3}
+        self._id_to_lang = ['da', 'en', 'ko', 'da_test']
         self.cls_token = '[CLS]'
         self.sep_token = '[SEP]'
         self.pad_token = '[PAD]'
@@ -89,6 +89,7 @@ class OLIDataset(Dataset):
         record = self.data.iloc[index]
         doc = preprocess(str(record['sample']), record['lang'])
         label = int(record['label'])
+        lang = self._lang_to_id[record['lang']]
         tokens = self.tokenize(doc)
         num_tokens = len(tokens)
         num_pad = self.max_seq_len - num_tokens
@@ -104,7 +105,8 @@ class OLIDataset(Dataset):
 
         data = {'input_ids': np.array(input_ids, dtype=np.int_),
                 'attn_mask': np.array(attention_mask, dtype=np.float),
-                'labels': np.array(label, dtype=np.int_)}
+                'labels': np.array(label, dtype=np.int_),
+                'lang': np.array(lang, dtype=np.int_)}
         if self.include_samples:
             data['samples'] = str(record['sample'])
         return data
