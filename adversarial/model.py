@@ -75,7 +75,7 @@ class AdversarialTrainingModule(ClassificationModule):
                                        target=target)
         return loss
 
-    def task_step(self, input_ids, attn_mask, labels):
+    def task_step(self, input_ids, attn_mask, labels, **kwargs):
         logits = self(input_ids=input_ids,
                       attention_mask=attn_mask)
         task_loss = self.task_loss(logits=logits, target=labels)
