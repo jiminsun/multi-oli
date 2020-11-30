@@ -3,8 +3,7 @@ import os
 
 import pytorch_lightning as pl
 import sys
-from setproctitle import setproctitle
-
+import torch
 
 from adversarial.data import AdversarialLearningDataModule
 from adversarial.model import AdversarialTrainingModule
@@ -14,7 +13,7 @@ from baseline.data import OLIDataset
 from baseline.model import ClassificationModule
 from plot_utils.tsne import TSNE
 from utils import generate_exp_name
-import torch
+
 
 def main(args):
     # fix random seeds for reproducibility
@@ -22,8 +21,6 @@ def main(args):
     pl.seed_everything(SEED)
     # generate experiment name
     exp_name = generate_exp_name(args)
-    # set process title to exp name
-    setproctitle(exp_name)
     # Set device
     device = torch.device(f'cuda:{args.device}') if torch.cuda.is_available() else torch.device('cpu')
 

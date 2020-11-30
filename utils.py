@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+from setproctitle import setproctitle
 
 import pandas as pd
 
@@ -18,6 +19,7 @@ def generate_exp_name(args):
     else:
         now = datetime.now().strftime("%m-%d-%H:%M")
         exp_name += now
+    setproctitle(exp_name)
     print(exp_name)
     return exp_name
 

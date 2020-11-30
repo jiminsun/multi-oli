@@ -3,7 +3,6 @@ import os
 
 import pytorch_lightning as pl
 import sys
-from setproctitle import setproctitle
 
 from adversarial.data import AdversarialLearningDataModule
 from adversarial.model import AdversarialTrainingModule
@@ -21,8 +20,6 @@ def main(args):
     pl.seed_everything(SEED)
     # generate experiment name
     exp_name = generate_exp_name(args)
-    # set process title to exp name
-    setproctitle(exp_name)
 
     if args.task == 'base':
         train_baseline(args, exp_name)
