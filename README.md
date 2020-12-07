@@ -3,7 +3,7 @@
 This repository contains code for the task - Multilingual Offensive Language Identification.
 Cross-lingual transfer techniques are utilized to improve performance in the target (often resource-poor) language, using resource-rich, source languages.
  
-There are three languages considered:
+Three languages are considered:
 * Danish (`da`)
 * Korean (`ko`)
 * English (`en`)
