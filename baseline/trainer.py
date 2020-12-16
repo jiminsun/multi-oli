@@ -6,6 +6,7 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 from baseline.data import OLIDataModule
 from baseline.model import ClassificationModule
+from utils import find_best_ckpt
 
 
 def train_baseline(args, exp_name):
@@ -13,12 +14,16 @@ def train_baseline(args, exp_name):
     if args.load_from is None:
         model = ClassificationModule(args)
     else:
+        if not args.load_from.endswith('.ckpt'):
+            args.load_from = find_best_ckpt(args.load_from)
+
         model = ClassificationModule.load_from_checkpoint(checkpoint_path=args.load_from,
                                                           args=args,
                                                           strict=False)
-        if args.freeze_bert:
-            for param in model.model.bert.parameters():
-                param.requires_grad = False
+
+    if args.freeze_bert:
+        for param in model.model.bert.parameters():
+            param.requires_grad = False
 
     # init dataset
     data_dir = os.path.join(args.data_dir, args.lang)
@@ -41,28 +46,28 @@ def train_baseline(args, exp_name):
     )
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
-        monitor='val_loss',
-        filepath=f'logs/{exp_name}/' + '{epoch}-{val_loss:.3f}-{val_f1:.3f}',
+        monitor='val_f1',
+        filepath=f'logs_{args.seed}/{exp_name}/' + '{epoch}-{val_loss:.3f}-{val_f1:.3f}',
         verbose=True,
         save_last=False,
-        mode='min',
+        mode='max',
         save_top_k=3,
         prefix=f'{args.lang}'
     )
 
     # tensorboard logger
     logger = pl_loggers.TensorBoardLogger(
-        save_dir='logs/',
+        save_dir=f'logs_{args.seed}/',
         name=exp_name,
     )
 
     # early stopping
     early_stop_callback = EarlyStopping(
-        monitor='val_loss',
+        monitor='val_f1',
         min_delta=0.00,
         patience=10,
         verbose=False,
-        mode='min'
+        mode='max'
     )
 
     # train
