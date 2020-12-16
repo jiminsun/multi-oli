@@ -178,7 +178,6 @@ class AdversarialTrainingModule(ClassificationModule):
         metrics['lang_logits'] = lang_logits
         return metrics
 
-
     def configure_optimizers(self):
         lr_task = self.hparams.task_lr
         lr_g = self.hparams.gen_lr
@@ -187,6 +186,20 @@ class AdversarialTrainingModule(ClassificationModule):
         opt_g = torch.optim.Adam(self.model.bert.parameters(), lr=lr_g)
         opt_d = torch.optim.Adam(self.language_out.parameters(), lr=lr_d)
         return [opt_task, opt_g, opt_d], []
+
+    def count_params(self):
+        module_names = ['model.bert', 'model.out', 'language_out']
+        from collections import defaultdict
+        cnt = defaultdict(int)
+        for n, p in self.named_parameters():
+            if p.requires_grad:
+                cnt['total'] += p.numel()
+                for module_name in module_names:
+                    if module_name in n:
+                        cnt[module_name] += p.numel()
+                    else:
+                        cnt[n] += p.numel()
+        print(cnt)
 
     @staticmethod
     def add_model_specific_args(parent_parser):
