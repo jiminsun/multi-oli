@@ -58,7 +58,7 @@ def predict(test_file, args):
 def main(args):
     # Load test dataset
     data_dir = os.path.join(args.data_dir, args.lang)
-    test_file = os.path.join(data_dir, 'train.txt')
+    test_file = os.path.join(data_dir, 'test.txt')
     predict(test_file, args)
 
 
