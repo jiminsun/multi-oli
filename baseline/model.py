@@ -87,10 +87,10 @@ class BaseModule(pl.LightningModule):
             lr_scheduler = {'scheduler': scheduler, 'name': 'cosine_schedule_with_warmup',
                             'monitor': 'loss', 'interval': 'step',
                             'frequency': 1}
+            return [optimizer], [lr_scheduler]
         else:
             optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
-            lr_scheduler = []
-        return [optimizer], [lr_scheduler]
+            return [optimizer], []
 
 
 class ClassificationModule(BaseModule):
@@ -172,14 +172,27 @@ class ClassificationModule(BaseModule):
         return metrics
 
     def test_step(self, batch, batch_idx):
-        metrics = self.validation_step(batch, batch_idx)
-        return metrics
+        logits = self.model(batch['input_ids'],
+                            batch['attn_mask'])
+        logits = torch.softmax(logits, dim=-1)
+        task_pred = logits.argmax(dim=-1)
+        output = {
+            'samples': batch['samples'],
+            'logits': logits.cpu().tolist(),
+            'y_true': batch['labels'].cpu().tolist(),
+            'y_pred': task_pred.cpu().tolist()
+        }
+        return output
 
     def test_epoch_end(self, outputs):
+        samples = []
+        logits = []
         y_true = []
         y_pred = []
 
         for output in outputs:
+            samples += output['samples']
+            logits += output['logits']
             y_true += output['y_true']
             y_pred += output['y_pred']
 
@@ -196,7 +209,10 @@ class ClassificationModule(BaseModule):
                    'test_recall': recall,
                    'test_f1': f1,
                    'y_true': y_true,
-                   'y_pred': y_pred}
+                   'y_pred': y_pred,
+                   'samples': samples,
+                   'logits': logits
+                   }
 
         print("\n")
         print("#" * 30)
