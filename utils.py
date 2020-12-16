@@ -69,6 +69,12 @@ def save_prediction(test_predictions, output_fname, args):
     if args.task == 'lang':
         output['logit'] = test_predictions['lang_logits']
         output['logit'] = output['logit'].apply(lambda x: float(x[0]))
+    else:
+        output['logit'] = test_predictions['logits']
+        output['logit'] = output['logit'].apply(lambda x: float(x[-1]))
     output['lang'] = args.lang
+    out_dir, _ = os.path.split(output_fname)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     output.to_csv(output_fname, sep='\t', encoding='utf-8')
     print(f'Predicted outputs save as {output_fname}')
