@@ -15,12 +15,13 @@ if __name__ == "__main__":
     df = load_data(args.input)
 
     if args.num_samples is None and args.ratio is None:
-        for train_size in [0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8]:
+        for train_size in [5, 10, 20, 50, 100, 200, 500, 1000, 2000]:
             train, _ = train_test_split(df, train_size=train_size,
                                         random_state=args.seed,
                                         stratify=df['label'])
             path, ext = os.path.splitext(args.input)
             out_fname = path + f'_{train_size}' + ext
+            save_data(df=train, fname=out_fname)
     else:
         train_size = args.num_samples if args.num_samples >= 1 else args.ratio
         train, _ = train_test_split(df, train_size=train_size,
