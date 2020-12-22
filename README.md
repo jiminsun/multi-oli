@@ -81,9 +81,7 @@ Optional command-line arguments for training are detailed below:
   --train_with_both     if true, uses the concatenated training dataset of target language and English
 ```
 
-Running this file will create a subdirectory inside `logs_{SEED}` directory, according to the experimental configuration (e.g., task, language, bert, experiment name). 
-
-Inside the corresponding directory, all model checkpoints, 
+Running this file will create a subdirectory inside `logs_{SEED}` directory, according to the experimental configuration (e.g., task, language, bert, experiment name), where all model checkpoints are saved during training.
 
 ### Run evaluation
 
