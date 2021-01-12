@@ -56,13 +56,18 @@ def train_adversarial(args, exp_name):
     )
 
     # train
+    if torch.cuda.is_available() and args.device >= 0:
+        gpus = [args.device]
+    else:
+        gpus = None
+
     trainer = pl.Trainer(
         logger=logger,
         callbacks=[early_stop_callback],
         automatic_optimization=False,
         max_epochs=args.max_epochs,
         min_epochs=args.min_epochs,
-        gpus=[args.device],
+        gpus=gpus,
         resume_from_checkpoint=args.load_from,
         checkpoint_callback=checkpoint_callback,
         gradient_clip_val=args.max_grad_norm,

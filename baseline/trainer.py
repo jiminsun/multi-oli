@@ -1,5 +1,6 @@
 import os
 
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -71,11 +72,16 @@ def train_baseline(args, exp_name):
     )
 
     # train
+    if torch.cuda.is_available() and args.device >= 0:
+        gpus = [args.device]
+    else:
+        gpus = None
+
     trainer = pl.Trainer(
         logger=logger,
         callbacks=[early_stop_callback],
         max_epochs=args.max_epochs,
-        gpus=[args.device],
+        gpus=gpus,
         # resume_from_checkpoint=args.load_from,
         checkpoint_callback=checkpoint_callback,
         gradient_clip_val=args.max_grad_norm,
